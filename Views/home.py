@@ -21,6 +21,14 @@ class Home(UserControl):
             self.fileNamesTodownload = {}
             self.refDownloadListChildRef = {}
 
+    def createVars(self):
+        self.projectData = {}
+        self.envData = {}
+        self.buildData = {}
+        self.portalData = {}
+        self.nodeNameData = {}
+        self.nodeTypeData = {}
+
     def __init__(self, username: str, password: str, filepicker, mtype):
         super().__init__()
         self.username = username
@@ -29,8 +37,23 @@ class Home(UserControl):
         self.filepicker = filepicker
         self.filesPaths = {}
         self.mtype = mtype
-        self.setupRefs()
+        self.ipAdd = ""
+        self.serv = ""
+        # self.setupRefs()
 
+        self.ipAddressDropDown = Ref[Dropdown]()
+        self.loadButton = Ref[ElevatedButton]()
+        self.projectDropDown = Ref[Dropdown]()
+        self.envroiment = Ref[Dropdown]()
+        self.portalsDropDown = Ref[Dropdown]()
+        self.nodeNameDropDown = Ref[Dropdown]()
+        self.nodeTypeDropDown = Ref[Dropdown]()
+        self.showMsg = Ref[Dropdown]()
+        self.setupRefs()
+        self.createVars()
+
+        
+        
     def progress(self, filename, size, sent):
         if (float(sent)/float(size)*100 == 100):
             filename = mainName = str(filename)
@@ -70,7 +93,6 @@ class Home(UserControl):
                     )
                 )
         self.update()
-        pass
 
     def onclickByFile(self, e):
         self.filepicker.on_result = self.onfileSelected
@@ -84,16 +106,16 @@ class Home(UserControl):
     def cleanErrorMsg(self):
         self.errorMsg.current.value=""
     def upload_m(self, e):
-        if (self.ipAddress.current.value == ''):
-            self.showErrorMsg("Please Enter Ip Address")
-            self.ipAddress.current.focus()
-            self.update()
-            return
-        if (self.serverAccountName.current.value == ''):
-            self.showErrorMsg("Please Enter Service Name")
-            self.serverAccountName.current.focus()
-            self.update()
-            return
+        # if (self.ipAddress.current.value == ''):
+        #     self.showErrorMsg("Please Enter Ip Address")
+        #     self.ipAddress.current.focus()
+        #     self.update()
+        #     return
+        # if (self.serverAccountName.current.value == ''):
+        #     self.showErrorMsg("Please Enter Service Name")
+        #     self.serverAccountName.current.focus()
+        #     self.update()
+        #     return
         if (self.distPath.current.value == ""):
             self.showErrorMsg("Please Enter Destination Path")
             self.distPath.current.focus()
@@ -106,13 +128,26 @@ class Home(UserControl):
             return
         try:
             # /home/userNames/
+            print(self.ipAdd)
+            print(self.serv)
+            
             self.sshClientCom = sshClientCom(
-                username=self.username, password=self.password, url=self.ipAddress.current.value, userTmpFolder='~/tmp')
+                username=self.username, password=self.password, url=self.ipAdd, userTmpFolder='~/tmp')
+
             self.sshClientCom.uploadFile(dist=self.distPath.current.value,
                                          src=self.filesPaths,
                                          progressCallBack=self.progress,
-                                         serverAccountName=self.serverAccountName.current.value
+                                         serverAccountName=self.serv
                                          )
+            # self.sshClientCom = sshClientCom(
+            #     username=self.username, password=self.password, url=self.ipAddress.current.value, userTmpFolder='~/tmp')
+
+            # self.sshClientCom.uploadFile(dist=self.distPath.current.value,
+            #                              src=self.filesPaths,
+            #                              progressCallBack=self.progress,
+            #                              serverAccountName=self.serverAccountName.current.value
+            #                              )
+                                         
             self.errorMsg.current.value = "Update Permissions successfully"
             self.errorMsg.current.color = colors.GREEN
             self.update()
@@ -121,11 +156,11 @@ class Home(UserControl):
             self.update()
 
     def downloadFiles_m(self, e):
-        if (self.ipAddress.current.value == ''):
-            self.showErrorMsg("Please Enter Ip Address")
-            self.ipAddress.current.focus()
-            self.update()
-            return
+        # if (self.ipAddress.current.value == ''):
+        #     self.showErrorMsg("Please Enter Ip Address")
+        #     self.ipAddress.current.focus()
+        #     self.update()
+        #     return
         if (self.pathtoSave.current.value == ''):
             self.showErrorMsg("Please Enter Service Name")
             self.pathtoSave.current.focus()
@@ -137,8 +172,9 @@ class Home(UserControl):
             self.update()
             return
         try:
+            print(self.ipAdd)
             self.sshClientCom = sshClientCom(
-                username=self.username, password=self.password, url=self.ipAddress.current.value, userTmpFolder='~/tmp')
+                username=self.username, password=self.password, url=self.ipAdd, userTmpFolder='~/tmp')
             self.sshClientCom.downloadFile(
                 fileNames=self.fileNamesTodownload, progressCallBack=self.progress, pathtoSave=self.pathtoSave.current.value)
             self.errorMsg.current.value = "Downloaded successfully, To open click on FolderIcon"
@@ -170,20 +206,152 @@ class Home(UserControl):
             self.showErrorMsg('Unable to add List Please add full path name')
         self.update()
 
+    def loadDataFromJson(self, e):
+        script_dir = os.getcwd()
+        print(f'---> file path {script_dir}')
+        file_path = str(script_dir) + '\\dup.json'
+        with open(file_path, 'r') as json_file:
+            data = json.load(json_file)
+            for project in data["Projects"]:
+                self.projectDropDown.current.options.append(
+                    dropdown.Option(
+                        text=project["name"],
+                        key=project["name"],
+                    )
+                )
+                self.projectData[project["name"]] = project["enviroment"]
+                # self.showProgress("Json Loaded successfully")
+        self.loadButton.current.disabled = True
+        self.update()
+    
+    def showProgress(self, txt: str):
+        if txt is not None and txt != '':
+            self.showMsg.current.value = txt
+            self.update()
+
+    def onChangeOnProject(self, e):
+        self.envroiment.current.options.clear()
+        for i in self.projectData[e.data]:
+            self.envroiment.current.options.append(
+                dropdown.Option(i["envName"])
+            )
+            self.envData[e.data+i["envName"]] = i["envData"]
+        self.update()
+
+    def onChangeOnEnv(self, e):
+        self.portalsDropDown.current.options.clear()
+        key = self.projectDropDown.current.value+e.data
+        for i in self.envData[key]:
+            self.portalsDropDown.current.options.append(
+                dropdown.Option(i["portalName"])
+            )
+            self.portalData[e.data+i["portalName"]] = i["portalData"]
+        self.update()
+    
+    def onChangePortalDropDown(self, e):
+        self.nodeNameDropDown.current.options.clear()
+        selectedEnvValue = self.envroiment.current.value
+        key = selectedEnvValue + e.data
+        ipAddress = self.portalData[key]['ipAddress']
+        print("############")
+        print(ipAddress)
+        self.ipAdd = ipAddress
+        print(self.ipAdd)
+        for i in self.portalData[key]['nodes']:
+            self.nodeNameDropDown.current.options.append(
+                dropdown.Option(i["nodeName"])
+            )
+            self.nodeNameData[e.data+i["nodeName"]] = i["nodeData"]
+        self.update()
+        
+    def onChangeNodeNameDropDown(self, e):
+        selectedPortalValue = self.portalsDropDown.current.value
+        key = selectedPortalValue + e.data
+        for i in self.nodeNameData[key]:
+            self.nodeTypeDropDown.current.options.append(
+                dropdown.Option(i["nodeType"])
+            )
+            self.nodeTypeData[e.data+i["nodeType"]] = i["serviceAccountName"]
+        self.update()
+
+    def onChangeNodeTypeDropDown(self, e):
+        selectedNodeNameValue = self.nodeNameDropDown.current.value
+        key = selectedNodeNameValue + e.data
+        print("############")
+        print(self.nodeTypeData[key])
+        self.serv = self.nodeTypeData[key]
+        print(self.serv)
+
+        # selectedEnvValue = self.envroiment.current.value
+        # key = selectedEnvValue + e.data
+        # for i in self.portalData[key]:
+        #     self.nodesDropDown.current.options.append(
+        #         dropdown.Option(i["portalName"])
+        #     )
+        # self.update()
+        
     def build(self):
         return Container(
             Column(
                 controls=[
                     Text(ref=self.errorMsg, size=20),
-                    TextField(ref=self.ipAddress,
-                              label="Vm's Ip Address To connect",
-                              border_color=colors.PURPLE_ACCENT,),
+                    ElevatedButton(
+                        ref=self.loadButton,
+                        content=Text("Load Data From Json"), on_click=self.loadDataFromJson
+                    ),
+                    Card(
+                        Container(
+                            height=100,
+                            padding=20,
+                            content=Row(
+                                controls=[
+                                        Dropdown(
+                                            label="Project",
+                                            ref=self.projectDropDown,
+                                            on_change=self.onChangeOnProject,
+                                        ), Dropdown(
+                                            label="Environment",
+                                            ref=self.envroiment,
+                                            on_change=self.onChangeOnEnv,
+                                        ),
+                                        Dropdown(
+                                            label="Portal Name",
+                                            ref=self.portalsDropDown,
+                                            on_change=self.onChangePortalDropDown
+                                        )
+                                    ]
+                                )
+                            )
+                        ),
+                        Card(
+                        Container(
+                            height=100,
+                            padding=20,
+                            content=Row(
+                                controls=[
+                                        Dropdown(
+                                            label="Node Name",
+                                            ref=self.nodeNameDropDown,
+                                            on_change=self.onChangeNodeNameDropDown
+                                        ),
+                                        Dropdown(
+                                            label="Node Type",
+                                            ref=self.nodeTypeDropDown,
+                                            on_change=self.onChangeNodeTypeDropDown
+                                        )
+                                    ]
+                                )
+                            )
+                        ),
+                    # TextField(ref=self.ipAddress,
+                    #           label="Vm's Ip Address To connect",
+                    #           border_color=colors.PURPLE_ACCENT,),
 
-                    TextField(ref=self.serverAccountName,
-                              label="Service Account name",
+                    # TextField(ref=self.serverAccountName,
+                    #           label="Service Account name",
 
-                              border_color=colors.PURPLE_ACCENT,
-                              ),
+                    #           border_color=colors.PURPLE_ACCENT,
+                    #           ),
                     TextField(ref=self.distPath,
 
                               border_color=colors.PURPLE_ACCENT,
@@ -213,7 +381,6 @@ class Home(UserControl):
                                 bgcolor=colors.PURPLE_ACCENT,
                                 color=colors.WHITE,
                             )
-
                         ]
                     ),
                     Container(
@@ -225,17 +392,34 @@ class Home(UserControl):
             ) if self.mtype else Column(
                 controls=[
                     Text(ref=self.errorMsg, size=20),
-                    TextField(ref=self.ipAddress,
-                              label="Vm's Ip Address To connect",
-                              border_color=colors.PURPLE_ACCENT,
-                              hint_text='127.0.0.1'
-                              ),
-                    TextField(ref=self.pathtoSave,
-                              label="Path to save",
-                              border_color=colors.PURPLE_ACCENT,
-                              ),
+                    # TextField(ref=self.ipAddress,
+                    #           label="Vm's Ip Address To connect",
+                    #           border_color=colors.PURPLE_ACCENT,
+                    #           hint_text='127.0.0.1'
+                    #           ),
+
+                    ElevatedButton(
+                        ref=self.loadButton,
+                        content=Text("Load Data From Json"), on_click=self.loadDataFromJson
+                    ),
+                    
+
                     Row(
                         controls=[
+                            Dropdown(
+                                            label="Project",
+                                            ref=self.projectDropDown,
+                                            on_change=self.onChangeOnProject,
+                                        ), Dropdown(
+                                            label="Environment",
+                                            ref=self.envroiment,
+                                            on_change=self.onChangeOnEnv,
+                                        ),
+                                        Dropdown(
+                                            label="Portal Name",
+                                            ref=self.portalsDropDown,
+                                            on_change=self.onChangePortalDropDown
+                                        ),
                             TextField(ref=self.downloadFileName,
                                       label="FileName",
                                       border_color=colors.PURPLE_ACCENT,
@@ -251,6 +435,10 @@ class Home(UserControl):
                             ),
                         ]
                     ),
+                    TextField(ref=self.pathtoSave,
+                              label="Path to save",
+                              border_color=colors.PURPLE_ACCENT,
+                              ),
                     Row(
                         controls=[
                             ElevatedButton(

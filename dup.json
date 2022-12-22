@@ -1,0 +1,38 @@
+{
+    "Projects": [
+        {
+            "name": "EE",
+            "enviroment": [
+                {
+                    "envName": "Dev",
+                    "envData": [
+                        {
+                            "portalName": "Das2",
+                            "portalData" : {
+                                "ipAddress": "159.39.149.26",
+                                "nodes": [
+                                    {
+                                        "nodeName": "node1",
+                                        "nodeData": [
+                                            {
+                                                "nodeType": "wp",
+                                                "serviceAccountName": "svc-batch-dev-ee-wp"
+                                            },
+                                            {
+                                                "nodeType": "SSP",
+                                                "serviceAccountName": "svc-batch-dev-ee-SSP"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+            
+                               
+                            
