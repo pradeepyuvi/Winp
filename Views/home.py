@@ -419,13 +419,39 @@ class Home(UserControl):
                                             label="Portal Name",
                                             ref=self.portalsDropDown,
                                             on_change=self.onChangePortalDropDown
-                                        ),
-                            TextField(ref=self.downloadFileName,
+                                        )
+                            
+                        ]
+                    ),
+                    Row(
+                        controls=[
+                    TextField(ref=self.pathtoSave,
+                              label="Path to save",
+                              border_color=colors.PURPLE_ACCENT,
+                              expand=True,
+                               hint_text='Full path',
+                              ),
+                    ]),
+                                    
+                    Row(
+                        controls=[
+                    
+                    TextField(ref=self.downloadFileName,
                                       label="FileName",
                                       border_color=colors.PURPLE_ACCENT,
                                       expand=True,
                                       hint_text='Ex: /home/username/pathtofile/text.txt',
-                                      ),
+                                      )]),
+                    
+                    # ElevatedButton(
+                    #             "Add Files to Download",
+                    #             icon=icons.ADD,
+                    #             bgcolor=colors.PURPLE_ACCENT,
+                    #             on_click=self.addToDownloadList,
+                    #             color=colors.WHITE,
+                    #         ),
+                    Row(
+                        controls=[
                             ElevatedButton(
                                 "Add Files to Download",
                                 icon=icons.ADD,
@@ -433,14 +459,6 @@ class Home(UserControl):
                                 on_click=self.addToDownloadList,
                                 color=colors.WHITE,
                             ),
-                        ]
-                    ),
-                    TextField(ref=self.pathtoSave,
-                              label="Path to save",
-                              border_color=colors.PURPLE_ACCENT,
-                              ),
-                    Row(
-                        controls=[
                             ElevatedButton(
                                 "Clear Files",
                                 icon=icons.CLEAR_ALL_OUTLINED,
